@@ -12,6 +12,17 @@ pub enum DialogAction {
 }
 
 impl DialogAction {
+    fn used_NPC(&self) -> Vec<NPC> {
+        match self {
+            DialogAction::Hablar(npc, _) => vec![*npc],
+            DialogAction::Darle(npc, _, _) => vec![*npc],
+            DialogAction::Enseñar(npc, _, _) => vec![*npc],
+            DialogAction::FairyComment(_, _) => vec![],
+        }
+    }
+}
+
+impl DialogAction {
     fn add_comment(&self, comment: String) -> DialogAction {
         match self {
             DialogAction::Hablar(npc, text) => {
@@ -72,6 +83,15 @@ pub struct StoryBeat {
     end_effect: StoryEffect,
 }
 
+impl StoryBeat {
+    fn used_NPC(&self) -> Vec<NPC> {
+        match &self.end_triger {
+            Dialog(d) => vec![d.used_NPC()],
+            _ => vec![],
+        }
+    }
+}
+
 #[derive(Eq, PartialEq, Clone, Debug)]
 pub struct SubStoryTransition {
     pub sub_story_end_effect: StoryEffect,
@@ -97,6 +117,26 @@ pub enum StoryEffect {
     CambiarStat(String, usize),
 }
 
+pub struct StoryLine {
+    pub beats: Vec<StoryBeat>,
+}
+
+use crate::story_builder::DialogAction::*
+
+impl StoryLine {
+    pub fn new(beat: StoryBeat) -> Self {
+        StoryLine { beats: vec![beat] }
+    }
+
+    pub fn used_NPC(&self) -> Vec<NPC> {
+        self.beats
+            .iter()
+            .flat_map(|e| e.used_NPC())
+
+            .collect()
+    }
+}
+
 pub struct StoryHeap {
     stories: Vec<(bool, Story)>,
 }
@@ -117,7 +157,7 @@ impl StoryHeap {
         effect: &StoryEffect,
         starting_dialog: &DialogAction,
         end_comment: &String,
-    ) -> Result<Vec<StoryBeat>, String> {
+    ) -> Result<StoryLine, String> {
         let mut story_line = vec![];
 
         let choosen_story = self.get(effect)?;
@@ -170,7 +210,7 @@ impl StoryHeap {
             end_effect: choosen_story.end_effect.to_owned(),
         });
 
-        Ok(story_line)
+        Ok(StoryLine::new(story_line))
     }
 
     pub fn get(&mut self, effect: &StoryEffect) -> Result<Story, String> {

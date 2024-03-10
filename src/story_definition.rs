@@ -1,3 +1,31 @@
+use crate::story_builder::*;
+
+use Triger::*;
+use DialogAction::*;
+use StoryEffect::*;
+
+
+#[derive(Eq, PartialEq, Clone, Debug)]
+pub enum InterestPoint {
+    Batidora,
+    OrangeTree,
+}
+use InterestPoint::*;
+
+impl InterestPoint {
+    pub fn name(&self) -> &'static str {
+        match self {
+            Batidora => "Batidora",
+            OrangeTree => "Naranjo",
+        }
+    }
+    pub fn location(&self) -> Place {
+        match self {
+            Batidora => Casa,
+            OrangeTree => Huerto,
+        }
+    }
+}
 
 #[derive(Eq, PartialEq, Clone, Debug, Copy)]
 pub enum Item {
@@ -71,19 +99,6 @@ impl NPC {
         }
     }
 }
-
-#[derive(Eq, PartialEq, Clone, Debug)]
-pub enum InterestPoint {
-    Batidora,
-    OrangeTree,
-}
-use InterestPoint::*;
-use Triger::*;
-use DialogAction::*;
-use StoryEffect::*;
-
-
-use crate::story_builder::*;
 
 pub fn get_story_heap() -> StoryHeap{
     StoryHeap::new(vec![
